@@ -1,4 +1,4 @@
-artifact_path: mlflow-artifacts:/1/models/m-342c881bb7964fc98f08537d52a89646/artifacts
+artifact_path: /workspaces/BDM-Assignment1/mlruns/1/models/m-a374e5711de84ca39594dd6da8ca2c0f/artifacts
 flavors:
   python_function:
     env:
@@ -7,7 +7,7 @@ flavors:
     loader_module: mlflow.sklearn
     model_path: model.pkl
     predict_fn: predict
-    python_version: 3.14.2
+    python_version: 3.12.3
   sklearn:
     code: null
     pickled_model: model.pkl
@@ -16,15 +16,15 @@ flavors:
     skops_trusted_types: null
 is_signature_from_type_hint: false
 mlflow_version: 3.16.0
-model_id: m-342c881bb7964fc98f08537d52a89646
-model_size_bytes: 886
-model_uuid: m-342c881bb7964fc98f08537d52a89646
+model_id: m-a374e5711de84ca39594dd6da8ca2c0f
+model_size_bytes: 909
+model_uuid: m-a374e5711de84ca39594dd6da8ca2c0f
 prompts: null
-run_id: 26e4be67a8a94dd1866c8a96cd66a0b3
+run_id: 5dc379882f134537a1388bfeae870eb8
 signature:
   inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1, 1]}}]'
   outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1,
     1]}}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2026-09-14 13:43:19.704583'
+utc_time_created: '2026-09-14 14:23:52.903531'
