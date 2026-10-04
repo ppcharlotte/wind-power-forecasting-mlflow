@@ -102,3 +102,39 @@ Your submission will be evaluated based on:
 * Clarity and depth of reflection in the report
 
 Model accuracy alone is *not* a grading criterion.
+
+---
+
+## Running the packaged project
+
+The training script evaluates five regression approaches. Each model has its own
+MLflow experiment and searches across all four wind-feature representations and
+its model-specific hyperparameters. Every search uses the same chronological
+holdout and time-series cross-validation folds. All paths, grids, and experiment
+settings are defined directly in `script.py`.
+
+Run the complete experiment directly:
+
+```bash
+python script.py
+```
+
+Run the same workflow as an MLflow Project:
+
+```bash
+MLFLOW_TRACKING_URI=sqlite:///mlflow.db mlflow run . \
+    --experiment-name WindPower-ProjectRuns
+```
+
+Each model experiment logs its champion's parameters, training and CV metrics,
+complete `cv_results` table, search grid, and candidate model artifact. The
+`WindPower-FinalSelection` experiment contains five flat champion runs for direct
+comparison. The script evaluates only the global CV winner on the chronological
+holdout, refits it on all historical data, predicts `future.csv`, and registers it
+as `OrkneyWindPowerForecaster`.
+
+Start the MLflow interface for the local SQLite tracking database with:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
+```

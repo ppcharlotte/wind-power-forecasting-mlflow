@@ -201,6 +201,12 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Local MLflow state and generated experiment outputs
+mlruns/
+mlartifacts/
+outputs/
+plots/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
