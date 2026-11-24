@@ -26,6 +26,37 @@ Preprocessing and estimation are combined in scikit-learn pipelines so scaling a
 
 Evaluation uses MAE, RMSE, and R². The grid-search result table ranks candidates by MAE, while model selection uses RMSE.
 
+## Design Decisions
+
+- **Three-hour alignment:** Power is recorded more frequently than weather forecasts. Averaging power over three-hour windows provides a common resolution for joining the two sources. Negative power measurements and incomplete modeling rows are removed rather than imputed.
+- **Circular wind features:** Compass direction wraps around at north. Sine/cosine encoding preserves this continuity; speed-weighted components also allow the models to capture interactions between wind strength and direction. Four representations are compared rather than assuming one is best.
+- **Nonlinear model comparison:** Exploratory plots show a curved wind-speed–power relationship. Polynomial Ridge, tree ensembles, and RBF SVR are compared with linear regression as a simple baseline. Scaling is applied to scale-sensitive models within the pipeline.
+- **Temporal validation:** The final 20% of observations are held out in time order. Five training-set validation folds each contain 56 observations, equivalent to seven days at three-hour resolution. This evaluates performance on subsequent periods while retaining an untouched final test period.
+- **RMSE-based selection:** RMSE penalizes large forecast errors more strongly than MAE. Cross-validation RMSE selects the winner; MAE and R² provide complementary views. Polynomial Ridge has a slightly lower CV MAE, but SVR wins on the predefined RMSE criterion.
+- **Tracking and refitting:** MLflow records configurations, metrics, and artifacts. Only the selected model is evaluated on the holdout; it is then refitted on all historical observations for future forecasting and registration.
+
+## Reference Results
+
+These checked-in results correspond to the supplied assignment report and local output files. They are reference results, not a verified rerun under the updated Python 3.14 dependency set, and have not been linked to the model ID from the recent serving session.
+
+The report describes 676 modeling samples: 540 for training and 136 for testing. Reported sources are SSEN power-production data and UK Met Office weather forecasts.
+
+| Model | Best feature representation | CV MAE (MW) | CV RMSE (MW) | CV R² |
+| --- | --- | ---: | ---: | ---: |
+| RBF SVR | Speed + circular direction | 4.936 | 6.479 | 0.468 |
+| Polynomial Ridge | Speed + wind vector | 4.824 | 6.499 | 0.463 |
+| Gradient boosting | Speed only | 5.099 | 6.669 | 0.438 |
+| Random forest | Speed only | 5.020 | 6.746 | 0.425 |
+| Linear regression | Speed + wind vector | 6.409 | 8.116 | 0.124 |
+
+The selected SVR uses `C=1`, `epsilon=1.0`, and `gamma="scale"`. Its held-out performance is **MAE 3.900 MW**, **RMSE 5.207 MW**, and **R² 0.774**. Its CV RMSE is approximately **20.2% lower** than the best linear-regression configuration; this is a cross-validation comparison, not a test-set improvement claim.
+
+![Observed and predicted power on the held-out period](results/test_predictions.png)
+
+![Exploratory analysis of wind and power](results/eda_plots.png)
+
+Reference files are available in [`results/`](results/): the [model comparison](results/model_comparison.csv), [held-out predictions](results/test_predictions.csv), and [future forecasts](results/future_predictions.csv). The future forecasts have no observed targets in this dataset.
+
 ## Quick Start
 
 Use Python 3.14 and run commands from the repository root.
@@ -105,6 +136,7 @@ The script also prints the selected model, test metrics, and first ten future pr
 ├── python_env.yaml    # MLflow-managed Python environment
 ├── requirements.txt   # Pinned dependencies
 ├── .gitignore         # Excludes local environments and experiment artifacts
+├── results/           # Selected reference outputs and plots
 └── data/
     ├── power.csv      # Historical power production
     ├── weather.csv    # Historical weather inputs
@@ -115,6 +147,6 @@ The script also prints the selected model, test metrics, and first ten future pr
 
 This repository implements a local training and model-registration workflow. The training script does not start a prediction API; model serving is a separate step.
 
-Missing training rows are dropped rather than imputed. A persistence baseline, additional historical-window comparisons, and deployment validation would strengthen the evaluation. Chronological splitting preserves temporal order, but operational use also requires checking forecast issue times and target-window alignment against the actual prediction horizon.
+Missing training rows are dropped rather than imputed. A persistence baseline and additional historical-window comparisons would strengthen the evaluation. A local API call was reported to return a prediction successfully; reproducible serving instructions and its exact run linkage remain separate from the reference results above. Chronological splitting preserves temporal order, but operational use also requires checking forecast issue times and target-window alignment against the actual prediction horizon.
 
 The full training search has not been rerun as part of preparing this public copy. Report quantitative performance from a reproducible run with its configuration and artifacts.
