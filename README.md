@@ -1,140 +1,118 @@
-# Forecasting Wind Power Production in Orkney
+# Wind Power Forecasting with MLflow
 
-The Orkney archipelago in the UK generates more than its net electricity needs from renewable energy, primarily wind power. However, wind power production is inherently variable and difficult to predict. Accurate forecasting is critical for grid stability, planning, and efficient energy distribution.
+A reproducible machine learning pipeline for forecasting wind power production in Orkney from weather inputs. The project combines temporal data alignment, wind-feature engineering, time-series model selection, and MLflow experiment tracking and model registration.
 
-In this assignment, you will design, implement, and serve a **reproducible machine learning pipeline** that predicts wind power generation in Orkney using real-world historical power data and weather forecasts. The emphasis is not on achieving the best possible accuracy, but on demonstrating good practices in **data engineering, modeling, reproducibility, and deployment** across the full machine learning lifecycle.
+Developed as a course project and adapted from [BDM-Assignment1](https://github.com/ppcharlotte/BDM-Assignment1).
 
-## How to get started
-1. First press the green button on the right called **Use this template** > **Create a new repository** > Set it as **private** when creating it.
-2. Once you have a copy repository, add us as collaborators through **Settings > Collaborators > Add people > Insert the following emails**: **msia@itu.dk, jaga@itu.dk, admchai@itu.dk** *(IMPORTANT: this is so we can check your project later on)*.
-3. Then, click on **<>Code**, select **Codespaces**, and finally **Create codespace on main**.
+## Approach
 
-In the assignment repository you will find a Jupyter Notebook `exploration.ipynb` with detailed instructions and helper code to get you started. Go through the steps in this notebook to get familiar with the datasets, pipelines, and working with MLflow. Your final project should solve the tasks mentioned below in the *Task description*.
+1. Remove negative power measurements, aggregate power to three-hour means, and join weather observations by timestamp.
+2. Drop rows with missing modeling inputs or targets and reserve the final 20% of observations as a chronological test set.
+3. Compare four feature representations: wind speed alone; speed with sine/cosine wind direction; wind-vector components; and speed with wind-vector components.
+4. Tune five regression model families using a shared five-fold `TimeSeriesSplit`, with 56 observations per validation fold.
+5. Select each model family's best configuration by cross-validation RMSE, then select the overall winner using the same criterion.
+6. Evaluate the winner on the held-out test period, refit it on all historical data, and forecast the weather inputs in `future.csv`.
+7. Log experiments and artifacts and register the final pipeline as `OrkneyWindPowerForecaster`.
 
----
+Preprocessing and estimation are combined in scikit-learn pipelines so scaling and polynomial transformations are fitted within each training fold.
 
+### Models
 
-## Task description
+- Linear regression
+- Polynomial regression with Ridge regularization
+- Random forest
+- RBF support vector regression
+- Gradient boosting
 
-You will build a **training and deployment pipeline** that transforms raw data into a forecasting service.
-  
-  - [ ] Data alignment
+Evaluation uses MAE, RMSE, and R². The grid-search result table ranks candidates by MAE, while model selection uses RMSE.
 
-  * Load power generation and weather forecast data
-  * Align the two data sources temporally (e.g. resampling, joins, or interpolation)
-  * Clearly justify your alignment strategy and discuss its implications
+## Quick Start
 
-  - [ ] Data preprocessing with pipelines
-
-   * Apply a suitable data-splitting strategy for train and test
-   * Handle missing values
-   * Transform wind direction into a numeric representation (e.g. encoding, radians, vector form)
-   * Scale numerical features where appropriate
-
-
-  - [ ] Model training and evaluation
-
-  * Train at least 2 regression models of your choice
-  * Use evaluation metrics appropriate for regression
-  * Use the `future.csv` file to generate future predictions (to check that your model works on new data) and include the first 10 predictions in the report
-
-  - [ ] Experiment tracking with MLflow
-  
-  * Log parameters, metrics, and artifacts using MLflow Tracking
-  * Organize experiments and runs clearly
-  * Use MLflow to compare model variants and select a best model
-  * You need to include in a report the results of your experiments from the MLflow interface
-  
-  - [ ] Model serving
-  
-  * Register the selected model using the MLflow Model format
-  * Serve the model
-  * Expose a prediction endpoint that accepts weather inputs and returns power forecasts
-  * You need to include in a report a screen capture showing successful serving of the model
-    
-  - [ ] Reproducibility with MLflow Projects
-  
-  * Package your training code as an MLProject
-  * Specify dependencies using an environment file
-  * Ensure the project can be executed from scratch on another machine
-  
-  - [ ] Reflection
-  
-  * Discussion of training data window size (e.g. 90 days)
-  * Mention limitations of your approach and potential improvements
----
-
-## Deliverables
-
-### Report (PDF)
-
-There are 2 deliverables for this project:
-
-- a report
-- the repository containing the MLFlow project and the .py script
-
-In the report you briefly describe how you solved the tasks above. For each task above explain why you chose a particular approach. Include the link to the repository in the report.
-
-**Maximum length:** 5 pages (excluding figures)
-
-**File name:** `<itu_username>-A1-report.pdf`
-
-**Submission:** on LearnIt
-
-**Include the link to the Git repository in the report.**
-
-### Code repository
-
-* A Git repository containing all code needed to run the pipeline
-* Code must run without errors
-* Code must be packaged as MLProject; it should be possible to run it with `mlflow run`
-* Include instructions for running training and deployment
-
----
-
-## Assessment criteria
-
-Your submission will be evaluated based on:
-
-* Pipeline design and correctness
-* Quality of preprocessing, feature engineering, modeling, and evaluation decisions
-* Appropriate use of MLflow for tracking and reproducibility
-* Clarity and depth of reflection in the report
-
-Model accuracy alone is *not* a grading criterion.
-
----
-
-## Running the packaged project
-
-The training script evaluates five regression approaches. Each model has its own
-MLflow experiment and searches across all four wind-feature representations and
-its model-specific hyperparameters. Every search uses the same chronological
-holdout and time-series cross-validation folds. All paths, grids, and experiment
-settings are defined directly in `script.py`.
-
-Run the complete experiment directly:
+Use Python 3.12 and run commands from the repository root.
 
 ```bash
+git clone https://github.com/ppcharlotte/wind-power-forecasting-mlflow.git
+cd wind-power-forecasting-mlflow
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 python script.py
 ```
 
-Run the same workflow as an MLflow Project:
+The full hyperparameter search can take substantial time. Paths, model grids, feature modes, and validation settings are configured in `script.py`; the search uses two parallel jobs.
+
+Alternatively, run the packaged MLflow Project:
 
 ```bash
 MLFLOW_TRACKING_URI=sqlite:///mlflow.db mlflow run . \
-    --experiment-name WindPower-ProjectRuns
+  --experiment-name WindPower-ProjectRuns
 ```
 
-Each model experiment logs its champion's parameters, training and CV metrics,
-complete `cv_results` table, search grid, and candidate model artifact. The
-`WindPower-FinalSelection` experiment contains five flat champion runs for direct
-comparison. The script evaluates only the global CV winner on the chronological
-holdout, refits it on all historical data, predicts `future.csv`, and registers it
-as `OrkneyWindPowerForecaster`.
+The project environment is specified in `python_env.yaml`. MLflow environment management may require additional local environment tooling.
 
-Start the MLflow interface for the local SQLite tracking database with:
+## Data
+
+The repository includes:
+
+| File | Purpose |
+| --- | --- |
+| `data/power.csv` | Historical power production; the target is `Total` |
+| `data/weather.csv` | Historical weather inputs, including `Speed` and `Direction` |
+| `data/future.csv` | Weather inputs for future predictions |
+
+All CSV files use a `time` column. Wind directions are mapped from 16 compass points to angles, then encoded as circular features or speed-weighted vector components.
+
+## Experiment Tracking
+
+Start the local MLflow UI:
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
 ```
+
+Open [http://localhost:5001](http://localhost:5001).
+
+Each model family has a separate experiment containing its best configuration, training and validation metrics, search grid, complete cross-validation table, and candidate model. `WindPower-FinalSelection` brings the five family winners together for comparison and records the final winner's test metrics and registered model.
+
+The copied repository includes an existing `mlflow.db`; it may contain historical runs and artifact paths from the original environment. A fresh training run generates local artifacts. To use a separate tracking database:
+
+```bash
+MLFLOW_TRACKING_URI=sqlite:///fresh_mlflow.db python script.py
+```
+
+Use the same tracking URI when opening the UI or accessing the registered model.
+
+## Outputs
+
+| Path | Contents |
+| --- | --- |
+| `outputs/model_comparison.csv` | Cross-validation results for the five family winners |
+| `outputs/test_predictions.csv` | Observed and predicted power for the held-out period |
+| `outputs/future_predictions.csv` | Future weather inputs with `Predicted_Total` |
+| `plots/eda_plots.png` | Exploratory wind and power plots |
+| `plots/test_predictions.png` | Test-period predictions versus observations |
+| MLflow registry | Final refitted pipeline, input signature, and example input |
+
+The script also prints the selected model, test metrics, and first ten future predictions.
+
+## Repository Structure
+
+```text
+├── script.py                 # Training, evaluation, tracking, and registration
+├── exploration.ipynb         # Original exploratory/course notebook
+├── MLproject                 # MLflow Project entry point
+├── python_env.yaml           # Python environment specification
+├── requirements.txt          # Pinned dependencies
+├── data/                     # Historical data and future weather inputs
+├── mlflow.db                 # Existing local experiment database
+└── register_model_guide.pdf   # Supporting model-registration material
+```
+
+## Scope and Limitations
+
+This repository implements a local training and model-registration workflow. The training script does not start a prediction API; model serving is a separate step.
+
+Missing training rows are dropped rather than imputed. A persistence baseline, additional historical-window comparisons, and deployment validation would strengthen the evaluation. Chronological splitting preserves temporal order, but operational use also requires checking forecast issue times and target-window alignment against the actual prediction horizon.
+
+The full training search has not been rerun as part of preparing this public copy. Report quantitative performance from a reproducible run with its configuration and artifacts.
