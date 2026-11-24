@@ -16,7 +16,7 @@ Developed as a course project and adapted from [BDM-Assignment1](https://github.
 
 Preprocessing and estimation are combined in scikit-learn pipelines so scaling and polynomial transformations are fitted within each training fold.
 
-### Models
+### Models and Evaluation
 
 - Linear regression
 - Polynomial regression with Ridge regularization
@@ -63,7 +63,7 @@ The repository includes:
 
 All CSV files use a `time` column. Wind directions are mapped from 16 compass points to angles, then encoded as circular features or speed-weighted vector components.
 
-## Experiment Tracking
+## Track Experiments
 
 Start the local MLflow UI:
 
@@ -75,7 +75,7 @@ Open [http://localhost:5001](http://localhost:5001).
 
 Each model family has a separate experiment containing its best configuration, training and validation metrics, search grid, complete cross-validation table, and candidate model. `WindPower-FinalSelection` brings the five family winners together for comparison and records the final winner's test metrics and registered model.
 
-The copied repository includes an existing `mlflow.db`; it may contain historical runs and artifact paths from the original environment. A fresh training run generates local artifacts. To use a separate tracking database:
+The first training run creates a local `mlflow.db` and artifact directories. These generated files are excluded from version control. To use a separate tracking database:
 
 ```bash
 MLFLOW_TRACKING_URI=sqlite:///fresh_mlflow.db python script.py
@@ -99,14 +99,16 @@ The script also prints the selected model, test metrics, and first ten future pr
 ## Repository Structure
 
 ```text
-├── script.py                 # Training, evaluation, tracking, and registration
-├── exploration.ipynb         # Original exploratory/course notebook
-├── MLproject                 # MLflow Project entry point
-├── python_env.yaml           # Python environment specification
-├── requirements.txt          # Pinned dependencies
-├── data/                     # Historical data and future weather inputs
-├── mlflow.db                 # Existing local experiment database
-└── register_model_guide.pdf   # Supporting model-registration material
+├── README.md          # Project overview and usage
+├── script.py          # Data preparation, training, evaluation, and registration
+├── MLproject          # MLflow Project entry point
+├── python_env.yaml    # MLflow-managed Python environment
+├── requirements.txt   # Pinned dependencies
+├── .gitignore         # Excludes local environments and experiment artifacts
+└── data/
+    ├── power.csv      # Historical power production
+    ├── weather.csv    # Historical weather inputs
+    └── future.csv     # Weather inputs for forecasting
 ```
 
 ## Scope and Limitations
