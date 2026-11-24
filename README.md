@@ -28,13 +28,13 @@ Evaluation uses MAE, RMSE, and R². The grid-search result table ranks candidate
 
 ## Quick Start
 
-Use Python 3.12 and run commands from the repository root.
+Use Python 3.14 and run commands from the repository root.
 
 ```bash
 git clone https://github.com/ppcharlotte/wind-power-forecasting-mlflow.git
 cd wind-power-forecasting-mlflow
 
-python3 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 python script.py
