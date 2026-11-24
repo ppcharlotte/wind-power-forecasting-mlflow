@@ -121,8 +121,8 @@ Use the same tracking URI when opening the UI or accessing the registered model.
 | `outputs/model_comparison.csv` | Cross-validation results for the five family winners |
 | `outputs/test_predictions.csv` | Observed and predicted power for the held-out period |
 | `outputs/future_predictions.csv` | Future weather inputs with `Predicted_Total` |
-| `plots/eda_plots.png` | Exploratory wind and power plots |
-| `plots/test_predictions.png` | Test-period predictions versus observations |
+| `outputs/eda_plots.png` | Exploratory wind and power plots |
+| `outputs/test_predictions.png` | Test-period predictions versus observations |
 | MLflow registry | Final refitted pipeline, input signature, and example input |
 
 The script also prints the selected model, test metrics, and first ten future predictions.
