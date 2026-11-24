@@ -1,12 +1,11 @@
 ########################################################################################################################
 # IMPORTS
-# You absolutely need these
+
 import json
 import mlflow
 import mlflow.sklearn
 import os
 
-# You will probably need these
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -17,7 +16,7 @@ import skops.io as sio
 
 matplotlib.use("Agg")
 
-# This are for example purposes. You may discard them if you don't use them.
+
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
